@@ -31,6 +31,7 @@ let replay_mode = false;
 let active = 0;
 let prozess = false;
 let pause = false;
+let DEBUG = false;
 
 
 function Main(pfad){
@@ -58,7 +59,7 @@ function Main(pfad){
 		if (eventType == "change"){
 			try {
 					if (prozess == true){
-							//console.log("Prozess wurde abgeblockt");
+							if (DEBUG) console.log("Array läuft noch durch den Code, neuer Inhalt wurde abgeblockt");
 						return;
 					}
 					prozess = true;
@@ -224,12 +225,12 @@ function Main(pfad){
 					}
 					
 					Party_overall_array = [...Party_overall];	//Array für daten array (immer gleich, ändert keine Positionen)
-						//console.log(Party_overall_array);
-						//console.log(Party);						//Array für Check, ob in aktueller Party (Position juckt)
+						if (DEBUG) console.log("Alle bisherigen Party Mitglieder: " + Party_overall_array);
+						if (DEBUG) console.log("Aktuelle Party Mitglieder: " + Party);	//Array für Check, ob in aktueller Party (Position juckt)
 					
 					for (let i = 0; i < Party_overall_array.length; i++){
 						if (Member_stats[Party_overall_array[i]]){
-							//console.log("Member schon erstellt");
+							if (DEBUG) console.log("Member wurde bereits erstellt: " + Party_overall_array[i]);
 						}
 							//console.log(Party_overall_array[i]);
 						else {
@@ -262,14 +263,14 @@ function Main(pfad){
 				if (y == 19){
 					if(reines_chat_array[h+20] == "????????????????????????????????????????" && reines_chat_array[h+20].includes(":") == false){
 						replay_mode = true;
-							//console.log("Wir sind gerade im Replay");
+							if (DEBUG) console.log("Wir sind gerade im Replay");
 					}
 				}
 				y = 0;
 			}
 			if (reines_chat_array[h].includes("seconds into the replay!") &&  reines_chat_array[h].includes(":") == false){
 				replay_mode = true;
-					//console.log("Wir sind gerade im Replay");
+					if (DEBUG) console.log("Wir sind gerade im Replay");
 			}
 			
 
@@ -290,7 +291,7 @@ function Main(pfad){
 			
 			if (z == 1){
 				replay_mode = false;
-					//console.log("Replay wurde verlassen");	
+					if (DEBUG) console.log("Replay wurde verlassen");	
 				z = 0;
 			}
 		}
@@ -301,13 +302,12 @@ function Main(pfad){
 		if (replay_mode == false && pause == false){
 			for (let element of reines_chat_array){
 				if (element.includes(":") == false && element.includes("BED DESTRUCTION")){
-						//console.log("Es wurde ein Bett zerstört");
-						//console.log(element);
+						if (DEBUG) console.log("Es wurde ein Bett zerstört: " + element)
 					for (let k = 0; k < Party.length; k++){
 						if (element.includes(Party[k])) {
 							Member_stats[Party[k]].beds ++;
 							Member_stats[Party[k]].session_beds ++;
-								console.log(Party[k] + ":" + Member_stats[Party[k]].beds);
+								if (DEBUG) console.log("Das Bett wurde von " + Party[k] + " zerstört. " + Party[k] + " hat jetzt " + Member_stats[Party[k]].beds + " Betten zerstört.");
 							Update_DOM(Member_stats, Party, finals_lost, beds);
 						}
 					}
@@ -323,29 +323,28 @@ function Main(pfad){
 		if (replay_mode == false && pause == false){
 			for (let b = 0; b < reines_chat_array.length; b++){
 				if (reines_chat_array[b].includes(":") == false && reines_chat_array[b].includes("FINAL KILL!")){
-						//console.log("Final Kill wurde erkannt");
+						if (DEBUG) console.log("Final Kill wurde erkannt");
 					let hihi = reines_chat_array[b];
 					if (Party.some(element => hihi.includes(element)) == false) {
-							//console.log("Final ist verloren gegangen: " + reines_chat_array[b]);
 						finals_lost ++;
+							if (DEBUG) console.log("Final ist verloren gegangen: " + reines_chat_array[b] + ". Bisher verlorene Finals: " + finals_lost);
 						Update_DOM(Member_stats, Party, finals_lost, beds);
 					}
 					
 					for (let k = 0; k < Party.length; k++){
 						if (reines_chat_array[b].indexOf(Party[k]) > 8) {
-								//console.log("Es war einer aus dem Team: " + reines_chat_array[b]);
 							Member_stats[Party[k]].finals ++;
 							Member_stats[Party[k]].session_finals ++;
-								//console.log(Party[k] + ":" + Member_stats[Party[k]].finals);
+								if (DEBUG) console.log("Der Final gehört jemandem aus unserem Team: " + reines_chat_array[b] + ". " + Party[k] + " besitzt jetzt " + Member_stats[Party[k]].finals + " Finals.");
 							Update_DOM(Member_stats, Party, finals_lost, beds);
 						}
 						else if (reines_chat_array[b].indexOf(Party[k]) > -1 && 3 > reines_chat_array[b].indexOf(Party[k])){
-								//console.log("Einer aus dem Team ist gestorben: " + reines_chat_array[b]);
 							Member_stats[Party[k]].final_deaths ++;
+								if (DEBUG) console.log("Einer aus dem Team ist gestorben: " + reines_chat_array[b] + ". " + Party[k] + " hat jetzt " + Member_stats[Party[k]].final_deaths + " Final Deaths.");
 							Update_DOM(Member_stats, Party, finals_lost, beds);
 						}
 					}
-						//console.log(Member_stats);
+						if (DEBUG) console.log(Member_stats);
 				}
 			}
 		}
@@ -355,35 +354,41 @@ function Main(pfad){
 
 
 	function Zeitdinger (reines_chat_array){
-		for (let element of reines_chat_array){
-			if (element.includes(":") == false && element.includes("The game starts in 20 seconds!")){
-				for (let k = 0; k < Party.length; k++){
-					Member_stats[Party[k]].finals = 0;
-					Member_stats[Party[k]].beds = 0;
-					finals_lost = 0;
+		if (replay_mode == false && pause == false){
+			for (let element of reines_chat_array){
+				if (element.includes(":") == false && element.includes("The game starts in") && element.includes("seconds!")){
+					for (let k = 0; k < Party.length; k++){
+						Member_stats[Party[k]].finals = 0;
+						Member_stats[Party[k]].beds = 0;
+						finals_lost = 0;
+						Update_DOM(Member_stats, Party, finals_lost, beds);
+					}
+				}
+				if (element.includes(":") == false && element.includes("has joined (")){
+					Zeit_temporaer = element.slice(element.indexOf("("), element.lastIndexOf(")")).split("/");
+					Zeit_temporaer[0] = Zeit_temporaer[0].slice(1, Zeit_temporaer[0].length);
+						//console.log(Zeit_temporaer[0]);
+						//console.log(Zeit_temporaer[1]);
+					Player_nicht_gejoint = Zeit_temporaer[1] - Zeit_temporaer[0];
+						if (DEBUG) console.log("Es ist jemand beigetreten. Es fehlen noch " + Player_nicht_gejoint + " Spieler.");
+				}
+				if (element.includes(":") == false && element.includes("has quit")){
+					Player_nicht_gejoint ++;
+						if (DEBUG) console.log("Es hat jemand das Spiel verlassen. Es fehlen noch " + Player_nicht_gejoint + " Spieler.");
+				}
+				
+				if (element.includes(":") == false && naechstes && element.includes("Bed Wars")){
+					finals_lost = finals_lost + Player_nicht_gejoint;
+						if (DEBUG) console.log("Das Spiel geht los. Es fehlen bis jetzt " + Player_nicht_gejoint + " Spieler.");
+					Player_nicht_gejoint = 0;
 					Update_DOM(Member_stats, Party, finals_lost, beds);
 				}
-			}
-			if (element.includes(":") == false && element.includes("has joined (")){
-					//console.log("Erkannt!");
-				Zeit_temporaer = element.slice(element.indexOf("("), element.lastIndexOf(")")).split("/");
-				Zeit_temporaer[0] = Zeit_temporaer[0].slice(1, Zeit_temporaer[0].length);
-					//console.log(Zeit_temporaer[0]);
-					//console.log(Zeit_temporaer[1]);
-				Player_nicht_gejoint = Zeit_temporaer[1] - Zeit_temporaer[0];
-					//console.log(Player_nicht_gejoint);
-			}
-			if (element.includes(":") == false && naechstes && element.includes("Bed Wars")){
-					//console.log("Ich bin der Bruno und ich bin der Kameramann");
-				finals_lost = finals_lost + Player_nicht_gejoint;
-				Player_nicht_gejoint = 0;
-				Update_DOM(Member_stats, Party, finals_lost, beds);
-			}
-			
-			naechstes = false;
-			
-			if (element.includes(":") == false && element.includes("????????????????????????????????????????????????????????????????")){
-				naechstes = true;
+				
+				naechstes = false;
+				
+				if (element.includes(":") == false && element.includes("????????????????????????????????????????????????????????????????")){
+					naechstes = true;
+				}
 			}
 		}
 		custom_commands(reines_chat_array);
@@ -401,15 +406,17 @@ function Main(pfad){
 						Member_stats[Name].final_deaths = 0;
 						finals_lost = 0;
 						Update_DOM(Member_stats, Party, finals_lost, beds);
-						
 					}
+						if (DEBUG) console.log("Stats wurden resetet.");
 				}
 				if (reines_chat_array[i].includes("tracker-pause")){
 					pause = true;
+						if (DEBUG) console.log("Stat tracking ist momentan pausiert.");
 					document.getElementById("Finals_die_wir_verloren_haben_sadface").innerHTML = "<span style=color:red> Currently paused </span>";
 				}
 				if (reines_chat_array[i].includes("tracker-resume")){
 					pause = false;
+						if (DEBUG) console.log("Stat tracking wird wieder fortgeführt.")
 					Update_DOM(Member_stats, Party, finals_lost, beds);
 				}
 			}
@@ -420,7 +427,7 @@ function Main(pfad){
 }
 
 function Update_DOM(Member_stats, Party, finals_lost, beds){
-		console.time("DOM Update");
+		//console.time("DOM Update");
 	document.getElementById("tabelle").innerHTML = "";
 	n = 0;
 	if (beds == false){
@@ -525,7 +532,7 @@ function Update_DOM(Member_stats, Party, finals_lost, beds){
 			document.getElementById("Finals_die_wir_verloren_haben_sadface").innerHTML = "<span style=color:red> Currently paused </span>";
 		}
 	}
-		console.timeEnd("DOM Update");
+		//console.timeEnd("DOM Update");
 }
 
 function switchen(){
