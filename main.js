@@ -1,17 +1,35 @@
 const { ipcMain, app, BrowserWindow, dialog } = require("electron")
 const path = require("path");
 const os = require("os");
+const fs = require("fs");
 
 let win
 
+// Speicherort der Positionsdatei
+const positionPath = path.join(app.getPath("userData"), "position.json");
+
 function createWindow() {
+
+  // Gespeicherte Position laden
+  let position = {};
+
+  if (fs.existsSync(positionPath)) {
+    try {
+      position = JSON.parse(fs.readFileSync(positionPath, "utf8"));
+    } catch (error) {
+      position = {};
+    }
+  }
+
   win = new BrowserWindow({
     width: 600,
     height: 400,
-	frame: false,
-	transparent: true,
-	alwaysOnTop: true,
-	resizable: true,
+    x: position.x,
+    y: position.y,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    resizable: true,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -19,6 +37,16 @@ function createWindow() {
   });
 
   win.loadFile("index.html");
+
+  // Position beim Schließen speichern
+  win.on("close", () => {
+    const bounds = win.getBounds();
+
+    fs.writeFileSync(positionPath, JSON.stringify({
+      x: bounds.x,
+      y: bounds.y
+    }));
+  });
 }
 
 
@@ -54,5 +82,5 @@ ipcMain.handle("pick-log", async () => {
   win.setAlwaysOnTop(wasOnTop);
 
   return result.canceled ? null : result.filePaths[0];
-});
+}); 
 

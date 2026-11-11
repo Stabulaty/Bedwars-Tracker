@@ -35,6 +35,8 @@ Type following things in the hypixel chat to access the Tracker:
 -/tracker-reset   -> Resets all stats
 -/tracker-pause   -> Pauses stat detection (if you want to view a replay and make sure that no extra Finals get counted for example)
 -/tracker-resume  -> Reenables stat detection
+-/tracker-[Name]-[Category]-[Operation]-[Amount] -> Player stats can be adjusted
+-/tracker-finalslost-[Operation]-[Amount] -> Changes the finals-lost counter
 
 
 Additional Information:

@@ -276,13 +276,13 @@ function Main(pfad){
 			
 
 			if (replay_mode && reines_chat_array[h].trim() === "") {
-				if (reines_chat_array[h-1] !== undefined && reines_chat_array[h-1].trim() !== "" && reines_chat_array[h+1] !== undefined && reines_chat_array[h+1].trim() !== ""){
+				if (reines_chat_array[h-1] !== undefined && reines_chat_array[h-1].trim() !== "" && reines_chat_array[h-1].includes("Blacklisted modifications are a bannable offense!") == false && reines_chat_array[h+1] !== undefined && reines_chat_array[h+1].trim() !== "" && reines_chat_array[h+1].includes("[WATCHDOG ANNOUNCEMENT]") == false){
 					z++;
 				}
-				else if (reines_chat_array[h-1] == undefined && reines_chat_array[h+1] !== undefined && reines_chat_array[h+1].trim() !== ""){
+				else if (reines_chat_array[h-1] == undefined && reines_chat_array[h+1] !== undefined && reines_chat_array[h+1].trim() !== "" && reines_chat_array[h+1].includes("[WATCHDOG ANNOUNCEMENT]") == false){
 					z++;
 				}
-				else if (reines_chat_array[h+1] == undefined && reines_chat_array[h-1] !== undefined && reines_chat_array[h-1].trim() !== ""){
+				else if (reines_chat_array[h+1] == undefined && reines_chat_array[h-1] !== undefined && reines_chat_array[h-1].trim() !== "" && reines_chat_array[h-1].includes("Blacklisted modifications are a bannable offense!") == false){
 					z++;
 				}
 				else if (reines_chat_array.length == 1) {
@@ -333,7 +333,7 @@ function Main(pfad){
 					}
 					
 					for (let k = 0; k < Party.length; k++){
-						if (reines_chat_array[b].indexOf(Party[k]) > 8) {
+						if (reines_chat_array[b].indexOf(Party[k]) > 6) {
 							Member_stats[Party[k]].finals ++;
 							Member_stats[Party[k]].session_finals ++;
 								if (DEBUG) console.log("Der Final gehört jemandem aus unserem Team: " + reines_chat_array[b] + ". " + Party[k] + " besitzt jetzt " + Member_stats[Party[k]].finals + " Finals.");
@@ -398,7 +398,7 @@ function Main(pfad){
 	function custom_commands(reines_chat_array){
 		for (let i = 0; i < reines_chat_array.length; i++){
 			if (reines_chat_array[i].includes('Unknown command. Type') && reines_chat_array[i].includes(":") == false){
-				if (reines_chat_array[i].includes("tracker-reset")){
+				if (reines_chat_array[i].includes("('tracker-reset')")){
 					for (let [Name, stats] of Object.entries(Member_stats)) {
 						Member_stats[Name].finals = 0;
 						Member_stats[Name].session_finals = 0;
@@ -410,15 +410,113 @@ function Main(pfad){
 					}
 						if (DEBUG) console.log("Stats wurden resetet.");
 				}
-				if (reines_chat_array[i].includes("tracker-pause")){
+				if (reines_chat_array[i].includes("('tracker-pause')")){
 					pause = true;
 						if (DEBUG) console.log("Stat tracking ist momentan pausiert.");
 					document.getElementById("Finals_die_wir_verloren_haben_sadface").innerHTML = "<span style=color:red> Currently paused </span>";
 				}
-				if (reines_chat_array[i].includes("tracker-resume")){
+				if (reines_chat_array[i].includes("('tracker-resume')")){
 					pause = false;
 						if (DEBUG) console.log("Stat tracking wird wieder fortgeführt.")
 					Update_DOM(Member_stats, Party, finals_lost, beds);
+				}
+				
+				if (reines_chat_array[i].includes("('tracker-") && reines_chat_array[i].includes("')")){
+					if (reines_chat_array[i].includes("finalslost-add")){
+						let order = reines_chat_array[i].slice(reines_chat_array[i].lastIndexOf("-") +1, reines_chat_array[i].length -2);
+						finals_lost = finals_lost + Number(order);
+						Update_DOM(Member_stats, Party, finals_lost, beds);
+					}
+					else if (reines_chat_array[i].includes("finalslost-remove")){
+						let order = reines_chat_array[i].slice(reines_chat_array[i].lastIndexOf("-") +1, reines_chat_array[i].length -2);
+						if (finals_lost - Number(order) > -1){
+							finals_lost = finals_lost - Number(order);
+						}
+						Update_DOM(Member_stats, Party, finals_lost, beds);
+					}
+					
+					else {
+						let temporär = reines_chat_array[i].slice(reines_chat_array[i].indexOf("-") +1,reines_chat_array[i].length - 2);
+							if (DEBUG) console.log(temporär);
+						
+						let victim = temporär.slice(0, temporär.indexOf("-"));
+							if (DEBUG) console.log(victim);
+						
+						let victim2
+						for (let i = 0; i < Object.keys(Member_stats).length; i++) {
+							if (victim.toLowerCase() == Object.keys(Member_stats)[i].toLowerCase()) {
+								victim2 = Object.keys(Member_stats)[i];
+							}
+						}
+						
+						let order = temporär.slice(temporär.lastIndexOf("-") +1, temporär.length);
+							if (DEBUG) console.log(order);
+						
+						let operation = temporär.slice(temporär.indexOf("-") +1, temporär.lastIndexOf("-"));
+							if (DEBUG) console.log(operation);
+						
+						if (victim2 !== ""){
+							//Normale Finals
+							if (operation == "finals-add"){
+								Member_stats[victim2].finals = Member_stats[victim2].finals + Number(order);
+								Member_stats[victim2].session_finals = Member_stats[victim2].session_finals + Number(order);
+							}
+							
+							if (operation == "finals-remove"){
+								if(Member_stats[victim2].finals - Number(order) > -1){
+									Member_stats[victim2].finals = Member_stats[victim2].finals - Number(order);
+									Member_stats[victim2].session_finals = Member_stats[victim2].session_finals - Number(order);
+								}
+							}
+							
+							//Session Finals
+							if (operation == "sessionfinals-add"){
+								Member_stats[victim2].session_finals = Member_stats[victim2].session_finals + Number(order);
+							}
+							
+							if (operation == "sessionfinals-remove"){
+								if(Member_stats[victim2].session_finals - Number(order) > -1 && Member_stats[victim2].session_finals - Number(order) > Member_stats[victim2].finals -1){
+									Member_stats[victim2].session_finals = Member_stats[victim2].session_finals - Number(order);
+								}
+							}
+							
+							//Final Deaths
+							if (operation == "deaths-add"){
+								Member_stats[victim2].final_deaths = Member_stats[victim2].final_deaths + Number(order);
+							}
+							
+							if (operation == "deaths-remove"){
+								if (Member_stats[victim2].final_deaths - Number(order) > -1){
+									Member_stats[victim2].final_deaths = Member_stats[victim2].final_deaths - Number(order);
+								}
+							}
+							
+							//Beds
+							if (operation == "beds-add"){
+								Member_stats[victim2].beds = Member_stats[victim2].beds + Number(order);
+								Member_stats[victim2].session_beds = Member_stats[victim2].session_beds + Number(order);
+							}
+							
+							if (operation == "beds-remove"){
+								if (Member_stats[victim2].beds - Number(order) > -1){
+									Member_stats[victim2].beds = Member_stats[victim2].beds - Number(order);
+									Member_stats[victim2].session_beds = Member_stats[victim2].session_beds - Number(order);
+								}
+							}
+							
+							//Session Beds
+							if (operation == "sessionbeds-add"){
+								Member_stats[victim2].session_beds = Member_stats[victim2].session_beds + Number(order);
+							}
+							
+							if (operation == "sessionbeds-remove"){
+								if (Member_stats[victim2].session_beds - Number(order) > -1 && Member_stats[victim2].session_beds - Number(order) > Member_stats[victim2].beds -1) {
+									Member_stats[victim2].session_beds = Member_stats[victim2].session_beds - Number(order);
+								}
+							}
+							Update_DOM(Member_stats, Party, finals_lost, beds);
+						}
+					}
 				}
 			}
 		}
