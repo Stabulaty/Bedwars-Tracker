@@ -71,11 +71,12 @@ function Main(pfad){
 						console.log(err);
 					}
 					size(fd);
+					prozess = false;
+						//active--;
+						//console.timeEnd("Log Verarbeitung");
 				})	
-			}	finally {
-						prozess = false;
-							//active--;
-							//console.timeEnd("Log Verarbeitung");
+			}	catch {
+					console.log("Error");
 			}
 		}
 		
